@@ -4,6 +4,10 @@ use std::process::Command;
 use std::rc::{Rc, Weak};
 use std::str;
 
+use crate::term;
+
+use log::debug;
+
 type ID = String;
 type Index = u32;
 
@@ -84,7 +88,7 @@ pub struct Pane {
 
 /// Run command `tmux list-panes` and collect output lines
 fn list_lines() -> Vec<String> {
-    let spec = vec![
+    let spec = [
         // session
         "#{session_id}",
         "#{session_name}",
@@ -92,14 +96,12 @@ fn list_lines() -> Vec<String> {
         "#{window_id}",
         "#{window_index}",
         "#{window_name}",
-        "#{window_width}",
-        "#{window_height}",
         // pane
         "#{pane_id}",
         "#{pane_index}",
         "#{pane_title}",
     ]
-    .into_iter()
+    .iter()
     .map(|x| x.to_string())
     .collect::<Vec<String>>()
     .join("\t");
@@ -134,6 +136,10 @@ pub fn create() -> Snapshot {
         geometry: Geometry::new(),
     };
 
+    let (w, h) = term::size();
+    tmux.geometry.window_width = w;
+    tmux.geometry.window_height = h;
+
     for line in lines {
         let mut tokens = line.split('\t');
 
@@ -161,8 +167,6 @@ pub fn create() -> Snapshot {
         let id = tokens.next().unwrap().to_string();
         let index: Index = tokens.next().unwrap().parse().unwrap();
         let name = tokens.next().unwrap().to_string();
-        tmux.geometry.window_width = tokens.next().unwrap().parse().unwrap();
-        tmux.geometry.window_height = tokens.next().unwrap().parse().unwrap();
         wnw = wnw.max(name.len());
 
         let window = Window {

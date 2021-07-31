@@ -1,4 +1,5 @@
 use crate::config::Config;
+use crate::term::{fg, span};
 use crate::tmux::snapshot::{Session, Snapshot, Window};
 
 use log::debug;
@@ -10,19 +11,6 @@ const LEFT_MARGIN: usize = 2; // for each fzf list line
 const MIN_GAP: usize = 4;
 
 const MIN_WIDTH: usize = 50;
-
-fn apply_color<S: std::fmt::Display>(style: S, text: &str) -> String {
-    format!("{}{}{}", style, text, style::Reset)
-}
-
-fn fg<C: color::Color>(color: C, text: &str) -> String {
-    apply_color(color::Fg(color), text)
-}
-
-fn span(width: usize) -> String {
-    let r = format!("{:·^1$}", "·", width);
-    fg(color::Black, &r)
-}
 
 pub struct Formatter {
     config: Config,
