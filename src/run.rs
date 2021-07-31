@@ -40,7 +40,7 @@ fn choose_window(config: Config) -> Option<String> {
     //
 
     let fzf = Formatter::new(tmux, config);
-    let width = fzf.width + 4 * 2 + 5; // 💀 magic number
+    let width = fzf.width + 4 * 2 + 5 - 2; // 💀 magic number
     debug!("fzf height: {}", fzf.height);
 
     let mut height = fzf.height + 2 * 2 + 5 + 1;
@@ -67,7 +67,7 @@ fn choose_window(config: Config) -> Option<String> {
         .arg("--no-sort")
         // .arg("--exact")
         .arg("--ansi")
-        .arg("--margin=2,4") // 💀 magic number
+        .arg("--margin=2,4,2,2") // 💀 magic number
         .arg("--inline-info")
         .arg("--header")
         .arg("") // sepratate line
