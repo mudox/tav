@@ -2,10 +2,13 @@ use crate::config::Config;
 use crate::term::{fg, span};
 use crate::tmux::snapshot::{Session, Snapshot, Window};
 
-use log::debug;
-use termion::{color, style};
+use std::cell::RefCell;
+use std::rc::Rc;
 
-const SS_WIDTH: usize = 2; // session symbol width
+use log::debug;
+use termion::color;
+
+const SS_WIDTH: usize = 4; // session symbol width
 const WS_WIDTH: usize = 2; // session symbol width
 const LEFT_MARGIN: usize = 2; // for each fzf list line
 const MIN_GAP: usize = 4;
@@ -71,8 +74,20 @@ impl Formatter {
     }
 
     fn compose_feed(&mut self) {
-        for (_, session) in &self.snapshot.sessions {
+        let mut sessions = self
+            .snapshot
+            .sessions
+            .values()
+            .cloned()
+            .collect::<Vec<Rc<RefCell<Session>>>>();
+
+        sessions.sort_by_key(|s| s.borrow().id.clone());
+
+        for (index, session) in sessions.into_iter().enumerate() {
             let session = session.borrow();
+            if index > 0 {
+                self.feed.push("[sep]\t".to_string());
+            }
             self.feed.push(self.live_session_line(&session));
 
             let mut windows = session
@@ -86,6 +101,11 @@ impl Formatter {
                 let window = window.borrow();
                 self.feed.push(self.window_line(&window));
             }
+        }
+
+        if !self.config.dead_session.names.is_empty() {
+            let sep = "[sep]\t".to_string();
+            self.feed.push(sep);
         }
 
         for name in &self.config.dead_session.names {
@@ -105,8 +125,13 @@ impl Formatter {
 
     fn live_session_line(&self, session: &Session) -> String {
         // symbol
-        let symbol = "";
-        // let symbol = "🐶";
+        let nbsp = "\u{a0}".to_string(); // default symbol
+        let symbol = self
+            .config
+            .session_icons
+            .get(&session.name)
+            .unwrap_or(&nbsp);
+
         let symbol = format!("{0:1$}", symbol, WS_WIDTH);
         // name
         let name = fg(color::Magenta, &session.name);
@@ -126,7 +151,7 @@ impl Formatter {
         let margin = span(SS_WIDTH);
         // symbol
         let mut symbol = format!("{0:1$}", "-", WS_WIDTH);
-        symbol = fg(color::Yellow, &symbol);
+        symbol = fg(color::Rgb(80, 80, 80), &symbol);
         // name
         let mut name = format!("{0:1$}", window.name, self.part1_width - WS_WIDTH);
         name = fg(color::Green, &name);
@@ -155,10 +180,11 @@ impl Formatter {
         let gray = color::Rgb(80, 80, 80);
 
         // symbol
-        let mut symbol = span(WS_WIDTH);
-        symbol = fg(gray, &symbol);
-        // let symbol = "";
-        // let symbol = format!("{0:1$}", symbol, WS_WIDTH);
+        let nbsp = "\u{a0}".to_string(); // default symbol
+        let symbol = self.config.session_icons.get(name).unwrap_or(&nbsp);
+
+        let symbol = format!("{0:1$}", symbol, SS_WIDTH);
+        // symbol = fg(gray, &symbol);
 
         // left
         let mut left = format!("{0:1$}", name, self.part1_width);

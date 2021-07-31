@@ -4,7 +4,7 @@ use crate::tmux::{cmd as tmux, snapshot};
 
 use log::{debug, error};
 
-use std::io::{self, Write};
+use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::str;
@@ -43,7 +43,7 @@ fn choose_window(config: Config) -> Option<String> {
     let width = fzf.width + 4 * 2 + 5; // 💀 magic number
     debug!("fzf height: {}", fzf.height);
 
-    let mut height = fzf.height + 2 * 2 + 5;
+    let mut height = fzf.height + 2 * 2 + 5 + 1;
     height = height.min(window_height - 16);
 
     let feed = fzf
@@ -63,13 +63,16 @@ fn choose_window(config: Config) -> Option<String> {
         .arg(width.to_string())
         .arg("-h") // popup window height
         .arg(height.to_string())
-        .arg("--exact")
         .arg("--with-nth=2..")
         .arg("--no-sort")
+        // .arg("--exact")
         .arg("--ansi")
-        .arg("--pointer=▶")
         .arg("--margin=2,4") // 💀 magic number
-        .arg("--inline-info");
+        .arg("--inline-info")
+        .arg("--header")
+        .arg("") // sepratate line
+        .arg("--prompt=▶ ")
+        .arg("--pointer=▶");
 
     for key in [/*"esc",*/ "ctrl-c", "ctrl-g", "ctrl-q"] {
         cmd_mut_ref = cmd_mut_ref.arg(format!("--bind={}:unix-line-discard", key));
