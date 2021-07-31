@@ -1,17 +1,46 @@
 use log::{debug, error};
+use serde::Deserialize;
 
-#[derive(Clone)]
+use std::collections::HashMap;
+use std::fs;
+use std::path::PathBuf;
+
+/// Return config dir string.
+pub fn dir() -> PathBuf {
+    let mut path = dirs::home_dir().unwrap();
+    path.push(".config/tav");
+    path
+}
+
+/// The all-in-one configuration model.
+#[derive(Clone, Deserialize, Debug)]
 pub struct Config {
+    #[serde(default)]
+    pub session_icons: HashMap<String, String>,
+
+    // dead sessions
+    #[serde(default)]
     pub dead_sessions_dir: String,
-    pub dead_sessions: Vec<String>,
+
+    #[serde(skip)]
+    pub dead_session: DeadSession,
+}
+
+#[derive(Clone, Default, Debug)]
+pub struct DeadSession {
+    pub dir: String,
+    pub names: Vec<String>,
 }
 
 impl Config {
     pub fn load() -> Config {
-        let mut cfg = Config {
-            dead_sessions_dir: "".to_string(),
-            dead_sessions: Vec::new(),
-        };
+        let mut path = dir();
+        path.push("tav.toml");
+
+        let cfg = fs::read_to_string(&path).unwrap();
+        let mut cfg: Config = toml::from_str(&cfg).unwrap();
+
+        debug!("load config: {:#?}", cfg);
 
         cfg.discover_dead_sessions();
 
@@ -30,7 +59,7 @@ impl Config {
         debug!("glob on {}", &path);
         match glob::glob(&path) {
             Ok(paths) => {
-                self.dead_sessions = paths
+                self.dead_session.names = paths
                     .filter_map(|result| {
                         let pathbuf = result.ok()?;
                         let filename = pathbuf.file_stem()?.to_str()?;

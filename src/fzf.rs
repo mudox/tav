@@ -100,7 +100,7 @@ impl Formatter {
             }
         }
 
-        for name in &self.config.dead_sessions {
+        for name in &self.config.dead_session.names {
             if self
                 .snapshot
                 .sessions
