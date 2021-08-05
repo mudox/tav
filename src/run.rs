@@ -46,12 +46,7 @@ fn choose_window(config: Config) -> Option<String> {
     let mut height = fzf.height + 2 * 2 + 5 + 1;
     height = height.min(window_height - 16);
 
-    let feed = fzf
-        .feed
-        .into_iter()
-        .map(|s| s.to_string())
-        .collect::<Vec<String>>()
-        .join("\n");
+    let feed = fzf.feed.join("\n");
 
     //
     // choose window id
@@ -66,6 +61,7 @@ fn choose_window(config: Config) -> Option<String> {
         .arg("--with-nth=2..")
         .arg("--no-sort")
         // .arg("--exact")
+        .arg("--tiebreak=end")
         .arg("--ansi")
         .arg("--margin=2,4,2,2") // 💀 magic number
         .arg("--inline-info")
