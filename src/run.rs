@@ -114,7 +114,7 @@ fn choose_window(config: Config) -> Option<String> {
 fn create_session(name: &str, config: Config) {
     debug!("resurrect session: {}", name);
 
-    let mut path = PathBuf::from(config.dead_sessions_dir);
+    let mut path = PathBuf::from(config.sessions_dir);
     path.push(&format!("{}.tmux-session.zsh", name));
 
     let path = path.to_str().unwrap();

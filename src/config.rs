@@ -26,7 +26,7 @@ pub struct Config {
 
     // dead sessions
     #[serde(default)]
-    pub dead_sessions_dir: String,
+    pub sessions_dir: String,
 
     #[serde(skip)]
     pub dead_session: DeadSession,
@@ -57,7 +57,7 @@ impl Config {
         let mut path = dirs::home_dir().unwrap();
         path.push(".config/tav/sessions");
 
-        self.dead_sessions_dir = path.to_str().unwrap().to_string();
+        self.sessions_dir = path.to_str().unwrap().to_string();
 
         path.push("*.tmux-session.zsh");
         let path = path.to_str().unwrap();
