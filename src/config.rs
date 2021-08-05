@@ -1,25 +1,29 @@
-use log::{debug, error};
-use serde::Deserialize;
-
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use serde::Deserialize;
+
+use crate::logging::*;
+
 /// Return config dir string.
 /// Return config dir.
 pub fn dir() -> PathBuf {
-    let mut path = dirs::home_dir().unwrap();
-    path.push(".config/ap");
+    let mut default_path = dirs::home_dir().unwrap();
     default_path.push(".config/tav");
 
     match std::env::var("XDG_CONFIG_HOME") {
-        Ok(path) => Path::new(&path).join("ap").to_path_buf(),
-        _ => path,
+        Ok(path) => Path::new(&path).join("ap"),
+        _ => default_path,
     }
 }
 
+/// Colors
+#[derive(Clone, Deserialize)]
+pub struct Color {}
+
 /// The all-in-one configuration model.
-#[derive(Clone, Deserialize, Debug)]
+#[derive(Clone, Deserialize, Debug, Default)]
 pub struct Config {
     #[serde(default)]
     pub session_icons: HashMap<String, String>,
@@ -43,8 +47,31 @@ impl Config {
         let mut path = dir();
         path.push("tav.toml");
 
-        let cfg = fs::read_to_string(&path).unwrap();
-        let mut cfg: Config = toml::from_str(&cfg).unwrap();
+        let text = fs::read_to_string(&path);
+
+        if let Err(error) = text {
+            warn!(
+                "failed to read from config file:\n  path: {:?}\n  error: {:#?}",
+                &path, error,
+            );
+
+            let mut cfg = Config::default();
+            cfg.discover_dead_sessions();
+
+            return cfg;
+        }
+
+        let mut cfg: Config = toml::from_str(&text.unwrap()).unwrap_or_else(|error| {
+            warn!(
+                "failed to deserialize from file:\n path: {:?}\n  error: {:#?}",
+                &path, error,
+            );
+
+            let mut cfg = Config::default();
+            cfg.discover_dead_sessions();
+
+            return cfg;
+        });
 
         debug!("load config: {:#?}", cfg);
 
