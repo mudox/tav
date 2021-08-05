@@ -74,6 +74,8 @@ impl Formatter {
     }
 
     fn compose_feed(&mut self) {
+        // live sessions
+
         let mut sessions = self
             .snapshot
             .sessions
@@ -103,10 +105,14 @@ impl Formatter {
             }
         }
 
+        // separator line
+
         if !self.config.dead_session.names.is_empty() {
             let sep = "[sep]\t".to_string();
             self.feed.push(sep);
         }
+
+        // dead sessions
 
         for name in &self.config.dead_session.names {
             if self

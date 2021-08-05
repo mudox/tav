@@ -3,8 +3,6 @@ use std::str;
 
 use termion::{color, style};
 
-use log::debug;
-
 /// Apply style and reset.
 pub fn apply_color<S: std::fmt::Display>(style: S, text: &str) -> String {
     format!("{}{}{}", style, text, style::Reset)

@@ -6,8 +6,6 @@ use std::str;
 
 use crate::term;
 
-use log::debug;
-
 type ID = String;
 type Index = u32;
 
