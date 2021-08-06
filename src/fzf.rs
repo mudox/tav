@@ -138,7 +138,7 @@ impl<'a> Formatter<'a> {
             .get(&session.name)
             .unwrap_or(&nbsp);
 
-        let symbol = lspan(symbol, color::White, WS_WIDTH);
+        let symbol = lspan(symbol, color::White, SS_WIDTH);
 
         // name
         let name = fg(color::Magenta, &session.name);
