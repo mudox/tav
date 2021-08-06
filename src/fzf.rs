@@ -1,12 +1,12 @@
-use crate::config::Config;
-use crate::term::{fg, span};
-use crate::tmux::snapshot::{Session, Snapshot, Window};
-
 use std::cell::RefCell;
 use std::rc::Rc;
 
 use log::debug;
 use termion::color;
+use termkit::ui::*;
+
+use crate::config::Config;
+use crate::tmux::snapshot::{Session, Snapshot, Window};
 
 const SS_WIDTH: usize = 4; // session symbol width
 const WS_WIDTH: usize = 2; // session symbol width
@@ -69,7 +69,7 @@ impl Formatter {
 
         self.part1_width = part1;
         self.part2_width = part2;
-        self.gap = span(gap_width);
+        self.gap = xspan(gap_width);
         self.width = width;
     }
 
@@ -138,7 +138,8 @@ impl Formatter {
             .get(&session.name)
             .unwrap_or(&nbsp);
 
-        let symbol = format!("{0:1$}", symbol, WS_WIDTH);
+        let symbol = lspan(symbol, color::White, WS_WIDTH);
+
         // name
         let name = fg(color::Magenta, &session.name);
 
@@ -154,13 +155,11 @@ impl Formatter {
 
     fn window_line(&self, window: &Window) -> String {
         // margin
-        let margin = span(SS_WIDTH);
+        let margin = xspan(SS_WIDTH);
         // symbol
-        let mut symbol = format!("{0:1$}", "-", WS_WIDTH);
-        symbol = fg(color::Rgb(80, 80, 80), &symbol);
+        let symbol = lspan("-", color::Rgb(80, 80, 80), WS_WIDTH);
         // name
-        let mut name = format!("{0:1$}", window.name, self.part1_width - WS_WIDTH);
-        name = fg(color::Green, &name);
+        let name = lspan(&window.name, color::Green, self.part1_width - WS_WIDTH);
         // path
         let session_name = window
             .session
@@ -168,8 +167,7 @@ impl Formatter {
             .map(|s| s.borrow().name.clone())
             .unwrap_or("[W]".to_string());
         let mut path = format!("{}:{}", session_name, window.index);
-        path = format!("{:>1$}", path, self.part2_width);
-        path = fg(color::Blue, &path);
+        path = rspan(&path, color::Blue, self.part2_width);
 
         format!(
             "{id}\t{margin}{symbol}{name}{gap}{path}",
@@ -188,18 +186,14 @@ impl Formatter {
         // symbol
         let nbsp = "\u{a0}".to_string(); // default symbol
         let symbol = self.config.session_icons.get(name).unwrap_or(&nbsp);
-
-        let symbol = format!("{0:1$}", symbol, SS_WIDTH);
-        // symbol = fg(gray, &symbol);
+        let symbol = lspan(symbol, color::White, SS_WIDTH);
 
         // left
-        let mut left = format!("{0:1$}", name, self.part1_width);
-        left = fg(gray, &left);
+        let left = lspan(name, gray, self.part1_width);
 
         // right
         let right = " ";
-        let right = format!("{:>1$}", right, self.part2_width);
-        let right = fg(gray, &right);
+        let right = rspan(&right, gray, self.part2_width);
 
         let line = format!(
             "[dead]{name}\t{symbol}{left}{gap}{right}",

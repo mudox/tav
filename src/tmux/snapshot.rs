@@ -4,7 +4,7 @@ use std::process::Command;
 use std::rc::{Rc, Weak};
 use std::str;
 
-use crate::term;
+use crate::tmux::cmd as tmux;
 
 type ID = String;
 type Index = u32;
@@ -31,9 +31,6 @@ pub struct Geometry {
     pub session_name_max_width: usize,
     pub window_name_max_width: usize,
     pub pane_title_max_width: usize,
-
-    pub window_width: usize,
-    pub window_height: usize,
 }
 
 impl Geometry {
@@ -42,9 +39,6 @@ impl Geometry {
             session_name_max_width: 0,
             window_name_max_width: 0,
             pane_title_max_width: 0,
-
-            window_width: 0,
-            window_height: 0,
         }
     }
 }
@@ -133,10 +127,6 @@ pub fn create() -> Snapshot {
         counts: Counts::new(),
         geometry: Geometry::new(),
     };
-
-    let (w, h) = term::size();
-    tmux.geometry.window_width = w;
-    tmux.geometry.window_height = h;
 
     for line in lines {
         let mut tokens = line.split('\t');

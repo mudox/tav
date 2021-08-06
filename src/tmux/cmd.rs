@@ -19,7 +19,7 @@ pub fn is_in_tmux() -> bool {
 }
 
 /// Return tmux client size.
-pub fn size() -> (usize, usize) {
+pub fn client_size() -> (usize, usize) {
     let output = Command::new("tmux")
         .arg("list-clients")
         .arg("-F")
