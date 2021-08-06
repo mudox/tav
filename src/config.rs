@@ -1,7 +1,9 @@
 use std::collections::HashMap;
+use std::error::Error;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use clap::{crate_authors, crate_description, crate_name, crate_version, App, AppSettings};
 use serde::Deserialize;
 
 use crate::logging::*;
@@ -18,9 +20,24 @@ pub fn dir() -> PathBuf {
     }
 }
 
-/// Colors
-#[derive(Clone, Deserialize)]
-pub struct Color {}
+#[derive(Clone, Default, Debug)]
+pub struct DeadSession {
+    pub dir: String,
+    pub names: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub enum Task {
+    List,
+    Fzf,
+    Popup,
+}
+
+impl Default for Task {
+    fn default() -> Self {
+        Self::Popup
+    }
+}
 
 /// The all-in-one configuration model.
 #[derive(Clone, Deserialize, Debug, Default)]
@@ -28,56 +45,64 @@ pub struct Config {
     #[serde(default)]
     pub session_icons: HashMap<String, String>,
 
-    // dead sessions
     #[serde(default)]
     pub sessions_dir: String,
 
     #[serde(skip)]
     pub dead_session: DeadSession,
-}
 
-#[derive(Clone, Default, Debug)]
-pub struct DeadSession {
-    pub dir: String,
-    pub names: Vec<String>,
+    #[serde(skip)]
+    pub task: Task,
 }
 
 impl Config {
     pub fn load() -> Config {
-        let mut path = dir();
-        path.push("tav.toml");
-
-        let text = fs::read_to_string(&path);
-
-        if let Err(error) = text {
-            warn!(
-                "failed to read from config file:\n  path: {:?}\n  error: {:#?}",
-                &path, error,
-            );
-
-            let mut cfg = Config::default();
-            cfg.discover_dead_sessions();
-
-            return cfg;
-        }
-
-        let mut cfg: Config = toml::from_str(&text.unwrap()).unwrap_or_else(|error| {
-            warn!(
-                "failed to deserialize from file:\n path: {:?}\n  error: {:#?}",
-                &path, error,
-            );
-
-            let mut cfg = Config::default();
-            cfg.discover_dead_sessions();
-
-            return cfg;
+        let mut cfg = Self::load_from_config().unwrap_or_else(|error| {
+            warn!("failed to load config: {:#?}", error,);
+            Config::default()
         });
 
         debug!("load config: {:#?}", cfg);
 
+        cfg.parse_args();
         cfg.discover_dead_sessions();
 
         cfg
+    }
+
+    fn load_from_config() -> Result<Config, Box<dyn Error>> {
+        let mut path = dir();
+        path.push("tav.toml");
+
+        let text = fs::read_to_string(&path);
+        Ok(toml::from_str(&text?)?)
+    }
+
+    fn parse_args(&mut self) {
+        let list_cmd = App::new("list")
+            .aliases(&["l", "ls"])
+            .about("Print out colored feed for `fzf`, for debug purpose")
+            .setting(AppSettings::Hidden);
+
+        let fzf_cmd = App::new("fzf")
+            .visible_alias("f")
+            .about("Run fzf directly to show tmux tree, not in tmux popup window");
+
+        let matches = App::new(crate_name!())
+            .author(crate_authors!())
+            .version(crate_version!())
+            .about(crate_description!())
+            .subcommand(list_cmd)
+            .subcommand(fzf_cmd)
+            .get_matches();
+
+        self.task = if let Some(_matches) = matches.subcommand_matches("list") {
+            Task::List
+        } else if let Some(_matches) = matches.subcommand_matches("fzf") {
+            Task::Fzf
+        } else {
+            Task::Popup
+        };
     }
 
     fn discover_dead_sessions(&mut self) {

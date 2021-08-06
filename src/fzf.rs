@@ -15,9 +15,9 @@ const MIN_GAP: usize = 4;
 
 const MIN_WIDTH: usize = 50;
 
-pub struct Formatter {
-    config: Config,
-    snapshot: Snapshot,
+pub struct Formatter<'a> {
+    config: &'a Config,
+    snapshot: &'a Snapshot,
 
     part1_width: usize,
     part2_width: usize,
@@ -29,8 +29,8 @@ pub struct Formatter {
     pub feed: Vec<String>,
 }
 
-impl Formatter {
-    pub fn new(snapshot: Snapshot, config: Config) -> Formatter {
+impl<'a> Formatter<'a> {
+    pub fn new(snapshot: &'a Snapshot, config: &'a Config) -> Formatter<'a> {
         let mut f = Formatter {
             config,
             snapshot,

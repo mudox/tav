@@ -22,8 +22,8 @@ pub fn is_in_tmux() -> bool {
 /// Return tmux client size.
 pub fn client_size() -> (usize, usize) {
     let output = Command::new("tmux")
-        .arg("list-clients")
-        .arg("-F")
+        .arg("display-message")
+        .arg("-p")
         .arg("#{client_width}\t#{client_height}")
         .output()
         .unwrap();

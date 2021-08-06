@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::str;
 
-use crate::config::Config;
+use crate::config::{Config, Task};
 use crate::fzf::Formatter;
 use crate::logging::*;
 use crate::tmux::{cmd as tmux, snapshot};
@@ -14,15 +14,23 @@ pub fn run(config: Config) {
         return;
     }
 
-    match choose_window(config.clone()) {
-        Some(id) => {
-            if id.starts_with("$") || id.starts_with("@") {
-                tmux::switch_to(&id);
-            } else if id.starts_with("[dead]") {
-                create_session(&id[6..], config.clone());
+    match config.task {
+        Task::Popup => match choose_window(config.clone()) {
+            Some(id) => {
+                if id.starts_with("$") || id.starts_with("@") {
+                    tmux::switch_to(&id);
+                } else if id.starts_with("[dead]") {
+                    create_session(&id[6..], config.clone());
+                }
             }
+            None => debug!("quit with noop"),
+        },
+        Task::Fzf => {}
+        Task::List => {
+            let snapshot = snapshot::create();
+            let formatter = Formatter::new(&snapshot, &config);
+            println!("{}", &formatter.feed.join("\n"));
         }
-        None => debug!("quit with noop"),
     }
 }
 
@@ -32,21 +40,21 @@ fn choose_window(config: Config) -> Option<String> {
     // take snapshot
     //
 
-    let tmux = snapshot::create();
+    let snapshot = snapshot::create();
     let (_, client_height) = tmux::client_size();
 
     //
     // generate fzf feed
     //
 
-    let fzf = Formatter::new(tmux, config);
-    let width = fzf.width + 4 * 2 + 5 - 2; // 💀 magic number
-    debug!("fzf height: {}", fzf.height);
+    let formatter = Formatter::new(&snapshot, &config);
+    let width = formatter.width + 4 * 2 + 5 - 2; // 💀 magic number
+    debug!("feed height: {}", formatter.height);
 
-    let mut height = fzf.height + 2 * 2 + 5 + 1;
+    let mut height = formatter.height + 2 * 2 + 5 + 1;
     height = height.min(client_height - 16);
 
-    let feed = fzf.feed.join("\n");
+    let feed = formatter.feed.join("\n");
 
     //
     // choose window id
