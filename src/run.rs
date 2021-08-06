@@ -1,15 +1,19 @@
-use crate::config::Config;
-use crate::fzf::Formatter;
-use crate::tmux::{cmd as tmux, snapshot};
-
-use log::{debug, error};
-
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::str;
 
+use crate::config::Config;
+use crate::fzf::Formatter;
+use crate::logging::*;
+use crate::tmux::{cmd as tmux, snapshot};
+
 pub fn run(config: Config) {
+    if !tmux::is_in_tmux() {
+        std::eprintln!("Not run in tmux environment");
+        return;
+    }
+
     match choose_window(config.clone()) {
         Some(id) => {
             if id.starts_with("$") || id.starts_with("@") {

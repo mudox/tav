@@ -12,3 +12,7 @@ pub fn switch_to(target: &str) {
         .spawn()
         .unwrap();
 }
+
+pub fn is_in_tmux() -> bool {
+    std::env::var("TMUX").is_ok()
+}
