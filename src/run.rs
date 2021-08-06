@@ -33,11 +33,7 @@ fn choose_window(config: Config) -> Option<String> {
     //
 
     let tmux = snapshot::create();
-
-    let window_width = tmux.geometry.window_width;
-    let window_height = tmux.geometry.window_height;
-    debug!("win width: {}", window_width);
-    debug!("win height: {}", window_height);
+    let (_, client_height) = tmux::client_size();
 
     //
     // generate fzf feed
@@ -48,7 +44,7 @@ fn choose_window(config: Config) -> Option<String> {
     debug!("fzf height: {}", fzf.height);
 
     let mut height = fzf.height + 2 * 2 + 5 + 1;
-    height = height.min(window_height - 16);
+    height = height.min(client_height - 16);
 
     let feed = fzf.feed.join("\n");
 
