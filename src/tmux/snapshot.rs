@@ -4,8 +4,6 @@ use std::process::Command;
 use std::rc::{Rc, Weak};
 use std::str;
 
-use crate::tmux::cmd as tmux;
-
 type ID = String;
 type Index = u32;
 
