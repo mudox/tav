@@ -61,26 +61,40 @@ fn choose_window(config: Config) -> Option<String> {
     //
 
     let mut cmd = Command::new("fzf-tmux");
-    let mut cmd_mut_ref = cmd
-        .arg("-w") // popup window width
+    let mut cmd_mut_ref = cmd.env("FZF_DEFAULT_OPTS", "");
+
+    // poopup
+    cmd_mut_ref = cmd_mut_ref
+        .arg("-w")
         .arg(width.to_string())
-        .arg("-h") // popup window height
-        .arg(height.to_string())
+        .arg("-h")
+        .arg(height.to_string());
+
+    // search
+    cmd_mut_ref = cmd_mut_ref
         .arg("--with-nth=2..")
         .arg("--no-sort")
         // .arg("--exact")
-        .arg("--tiebreak=end")
+        .arg("--tiebreak=end");
+
+    // appearance
+    cmd_mut_ref = cmd_mut_ref
+        .arg("--layout=reverse")
         .arg("--ansi")
         .arg("--margin=2,4,2,2") // 💀 magic number
+        .arg("--padding=1")
         .arg("--inline-info")
         .arg("--header")
         .arg("") // sepratate line
         .arg("--prompt=▶ ")
         .arg("--pointer=▶");
 
-    for key in [/*"esc",*/ "ctrl-c", "ctrl-g", "ctrl-q"] {
-        cmd_mut_ref = cmd_mut_ref.arg(format!("--bind={}:unix-line-discard", key));
-    }
+    // key bindings
+    cmd_mut_ref = cmd_mut_ref
+        .arg("--bind")
+        .arg("ctrl-f:page-down")
+        .arg("--bind")
+        .arg("ctrl-b:page-up");
 
     let mut child = cmd_mut_ref
         .arg("--color=bg:-1,bg+:-1") // transparent background
