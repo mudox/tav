@@ -92,9 +92,13 @@ fn choose_window(config: Config) -> Option<String> {
     // key bindings
     cmd_mut_ref = cmd_mut_ref
         .arg("--bind")
-        .arg("ctrl-f:page-down")
+        .arg("ctrl-j:page-down")
         .arg("--bind")
-        .arg("ctrl-b:page-up");
+        .arg("ctrl-k:page-up")
+        .arg("--bind")
+        .arg("ctrl-f:preview-page-down")
+        .arg("--bind")
+        .arg("ctrl-b:preview-page-up");
 
     let mut child = cmd_mut_ref
         .arg("--color=bg:-1,bg+:-1") // transparent background
