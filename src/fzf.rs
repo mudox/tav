@@ -1,9 +1,8 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use console::{pad_str, style, Alignment::*, Color};
 use log::debug;
-use termion::color;
-use termkit::ui::*;
 
 use crate::config::Config;
 use crate::tmux::snapshot::{Session, Snapshot, Window};
@@ -14,6 +13,11 @@ const LEFT_MARGIN: usize = 2; // for each fzf list line
 const MIN_GAP: usize = 4;
 
 const MIN_WIDTH: usize = 50;
+
+const GRAY: Color = Color::Color256(242);
+// lazy_static! {
+// static ref GRAY: Color = Color::Color256(246);
+// }
 
 pub struct Formatter<'a> {
     config: &'a Config,
@@ -138,18 +142,17 @@ impl<'a> Formatter<'a> {
             .get(&session.name)
             .unwrap_or(&nbsp);
 
-        let symbol = lspan(symbol, color::White, SS_WIDTH);
+        let symbol = pad_str(symbol, SS_WIDTH, Left, None);
 
         // name
-        let name = fg(color::Magenta, &session.name);
+        let name = style(&session.name).magenta().to_string();
+        let name = pad_str(&name, self.part1_width, Left, None);
 
         format!(
-            "{id}\t{symbol:symbol_width$}{name:name_width$}",
+            "{id}\t{symbol}{name}",
             id = session.id,
             symbol = symbol,
-            symbol_width = SS_WIDTH,
             name = name,
-            name_width = self.part1_width,
         )
     }
 
@@ -157,9 +160,11 @@ impl<'a> Formatter<'a> {
         // margin
         let margin = xspan(SS_WIDTH);
         // symbol
-        let symbol = lspan("-", color::Rgb(80, 80, 80), WS_WIDTH);
+        let symbol = style("-").fg(GRAY).to_string();
+        let symbol = pad_str(&symbol, WS_WIDTH, Left, None);
         // name
-        let name = lspan(&window.name, color::Green, self.part1_width - WS_WIDTH);
+        let name = style(&window.name).green().to_string();
+        let name = pad_str(&name, self.part1_width - WS_WIDTH, Left, None);
         // path
         let session_name = window
             .session
@@ -167,7 +172,8 @@ impl<'a> Formatter<'a> {
             .map(|s| s.borrow().name.clone())
             .unwrap_or("[W]".to_string());
         let mut path = format!("{}:{}", session_name, window.index);
-        path = rspan(&path, color::Blue, self.part2_width);
+        path = style(path).blue().to_string();
+        let path = pad_str(&path, self.part2_width, Right, None);
 
         format!(
             "{id}\t{margin}{symbol}{name}{gap}{path}",
@@ -181,19 +187,19 @@ impl<'a> Formatter<'a> {
     }
 
     fn dead_session_line(&self, name: &str) -> String {
-        let gray = color::Rgb(80, 80, 80);
-
         // symbol
         let nbsp = "\u{a0}".to_string(); // default symbol
         let symbol = self.config.session_icons.get(name).unwrap_or(&nbsp);
-        let symbol = lspan(symbol, color::White, SS_WIDTH);
+        let symbol = pad_str(symbol, SS_WIDTH, Left, None);
 
         // left
-        let left = lspan(name, gray, self.part1_width);
+        let left = style(name).fg(GRAY).to_string();
+        let left = pad_str(&left, self.part1_width, Left, None);
 
         // right
         let right = " ";
-        let right = rspan(&right, gray, self.part2_width);
+        let right = style(right).fg(GRAY).to_string();
+        let right = pad_str(&right, self.part2_width, Right, None);
 
         let line = format!(
             "[dead]{name}\t{symbol}{left}{gap}{right}",
@@ -207,4 +213,10 @@ impl<'a> Formatter<'a> {
         debug!("dead session line: {}", line);
         line
     }
+}
+
+/// Transparent fixed length span.
+pub fn xspan(width: usize) -> String {
+    let s = style(".").black().to_string();
+    pad_str(&s, width, Left, None).to_string()
 }
