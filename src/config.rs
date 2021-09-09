@@ -86,7 +86,8 @@ impl Config {
 
         let fzf_cmd = App::new("fzf")
             .visible_alias("f")
-            .about("Run fzf directly to show tmux tree, not in tmux popup window");
+            .about("Run fzf directly to show tmux tree, not in tmux popup window")
+            .setting(AppSettings::Hidden);
 
         let matches = App::new(crate_name!())
             .author(crate_authors!())
