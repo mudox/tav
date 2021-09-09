@@ -8,7 +8,7 @@ use crate::config::Config;
 use crate::tmux::snapshot::{Session, Snapshot, Window};
 
 const SS_WIDTH: usize = 4; // session symbol width
-const WS_WIDTH: usize = 2; // session symbol width
+const WS_WIDTH: usize = 2; // window symbol width
 const LEFT_MARGIN: usize = 2; // for each fzf list line
 const MIN_GAP: usize = 4;
 
