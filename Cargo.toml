@@ -1,6 +1,6 @@
 [package]
 name = "tav"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Mudox <imudox@gmail.com>"]
 description = "Tmux Naigator"
 edition = "2018"
