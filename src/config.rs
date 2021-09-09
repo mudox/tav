@@ -26,6 +26,12 @@ pub struct DeadSession {
     pub names: Vec<String>,
 }
 
+impl DeadSession {
+    pub fn max_name_width(&self) -> usize {
+        self.names.iter().map(|n| n.len()).max().unwrap_or(0)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Task {
     List,

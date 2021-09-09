@@ -59,20 +59,24 @@ impl<'a> Formatter<'a> {
     fn calculate_sizes(&mut self) {
         // calculate sizes
 
-        let mut part1 = self.snapshot.geometry.session_name_max_width;
-        part1 = part1.max(self.snapshot.geometry.window_name_max_width);
+        let widths = [
+            self.snapshot.geometry.session_name_max_width,
+            self.snapshot.geometry.window_name_max_width,
+            self.config.dead_session.max_name_width(),
+        ];
+        let part1_width = widths.iter().max().unwrap_or(&0);
 
-        let mut part2 = self.snapshot.geometry.session_name_max_width;
-        part2 += 4; // for `:1` window index part
-        part2 = part2.max(10);
+        let mut part2_width = self.snapshot.geometry.session_name_max_width;
+        part2_width += 4; // for `:1` window index part
+        part2_width = part2_width.max(10);
 
-        let width_without_gap = LEFT_MARGIN + SS_WIDTH + part1 + part2;
+        let width_without_gap = LEFT_MARGIN + SS_WIDTH + part1_width + part2_width;
         let width_with_gap = width_without_gap + MIN_GAP;
         let width = width_with_gap.max(MIN_WIDTH);
         let gap_width = width - width_without_gap;
 
-        self.part1_width = part1;
-        self.part2_width = part2;
+        self.part1_width = *part1_width;
+        self.part2_width = part2_width;
         self.gap = xspan(gap_width);
         self.width = width;
     }
@@ -164,7 +168,7 @@ impl<'a> Formatter<'a> {
         let symbol = pad_str(&symbol, WS_WIDTH, Left, None);
         // name
         let name = style(&window.name).green().to_string();
-        let name = pad_str(&name, self.part1_width - WS_WIDTH, Left, None);
+        let name = pad_str(&name, self.part1_width - WS_WIDTH, Left, Some(""));
         // path
         let session_name = window
             .session
@@ -173,7 +177,7 @@ impl<'a> Formatter<'a> {
             .unwrap_or("[W]".to_string());
         let mut path = format!("{}:{}", session_name, window.index);
         path = style(path).blue().to_string();
-        let path = pad_str(&path, self.part2_width, Right, None);
+        let path = pad_str(&path, self.part2_width, Right, Some(""));
 
         format!(
             "{id}\t{margin}{symbol}{name}{gap}{path}",
@@ -199,7 +203,7 @@ impl<'a> Formatter<'a> {
         // right
         let right = " ";
         let right = style(right).fg(GRAY).to_string();
-        let right = pad_str(&right, self.part2_width, Right, None);
+        let right = pad_str(&right, self.part2_width, Right, Some(""));
 
         let line = format!(
             "[dead]{name}\t{symbol}{left}{gap}{right}",
@@ -210,7 +214,19 @@ impl<'a> Formatter<'a> {
             right = right,
         );
 
+        let t = format!(
+            "{symbol}{left}{gap}{right}",
+            symbol = symbol,
+            left = left,
+            gap = self.gap,
+            right = right,
+        );
+
         debug!("dead session line: {}", line);
+        debug!(
+            "dead session line width: {}",
+            console::measure_text_width(&t)
+        );
         line
     }
 }
