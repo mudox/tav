@@ -9,6 +9,8 @@ use crate::logging::*;
 use crate::tmux::{cmd as tmux, snapshot};
 
 pub fn run(config: Config) {
+    console::set_colors_enabled(true);
+
     if !tmux::is_in_tmux() {
         std::eprintln!("Not run in tmux environment");
         return;
