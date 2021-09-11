@@ -1,1 +1,4 @@
-![screenshot](asset/tav-0.1.png)
+# Screenshots
+
+![screenshot using nerd icons](asset/nerd.png)
+![screenshot using emoji icons](asset/emoji.png)
