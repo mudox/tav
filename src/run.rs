@@ -63,7 +63,7 @@ fn choose_window(config: Config) -> Option<String> {
     //
 
     let mut cmd = Command::new("fzf-tmux");
-    let mut cmd_mut_ref = cmd.env("FZF_DEFAULT_OPTS", "");
+    let mut cmd_mut_ref = cmd.env("FZF_DEFAULT_OPTS", ""); // reset env effect
 
     // poopup
     cmd_mut_ref = cmd_mut_ref
@@ -81,10 +81,11 @@ fn choose_window(config: Config) -> Option<String> {
 
     // appearance
     cmd_mut_ref = cmd_mut_ref
+        .arg("--color=bg:-1,bg+:-1") // transparent background
         .arg("--layout=reverse")
         .arg("--ansi")
-        .arg("--margin=2,4,2,2") // 💀 magic number
-        .arg("--padding=1")
+        .arg("--margin=3,5,3,3") // 💀 magic number
+        // .arg("--padding=1")
         .arg("--inline-info")
         .arg("--header")
         .arg("") // sepratate line
@@ -103,8 +104,6 @@ fn choose_window(config: Config) -> Option<String> {
         .arg("ctrl-b:preview-page-up");
 
     let mut child = cmd_mut_ref
-        .arg("--color=bg:-1,bg+:-1") // transparent background
-        .arg("--border=none")
         // pipe
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
