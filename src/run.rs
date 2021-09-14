@@ -74,6 +74,8 @@ fn choose_window(config: Config) -> Option<String> {
 
     // search
     cmd_mut_ref = cmd_mut_ref
+        // .arg("--no-extended")
+        .arg("--exact")
         .arg("--with-nth=2..")
         .arg("--no-sort")
         // .arg("--exact")
