@@ -85,7 +85,6 @@ fn choose_window(config: Config) -> Option<String> {
         .arg("--layout=reverse")
         .arg("--ansi")
         .arg("--margin=3,5,3,3") // 💀 magic number
-        // .arg("--padding=1")
         .arg("--inline-info")
         .arg("--header")
         .arg("") // sepratate line
@@ -99,9 +98,9 @@ fn choose_window(config: Config) -> Option<String> {
         .arg("--bind")
         .arg("ctrl-k:page-up")
         .arg("--bind")
-        .arg("ctrl-f:preview-page-down")
+        .arg("ctrl-f:page-down")
         .arg("--bind")
-        .arg("ctrl-b:preview-page-up");
+        .arg("ctrl-b:page-up");
 
     let mut child = cmd_mut_ref
         // pipe
