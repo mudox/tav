@@ -9,7 +9,7 @@ edition = "2018"
 
 [dependencies]
 # cli
-clap = "3.0.0-beta.2"
+clap = "3.0.0-beta.4"
 
 # ui
 console = "0.14.1"
