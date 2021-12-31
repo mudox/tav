@@ -122,7 +122,7 @@ impl Config {
         let path = path.to_str().unwrap();
 
         debug!("glob on {}", &path);
-        match glob::glob(&path) {
+        match glob::glob(path) {
             Ok(paths) => {
                 self.dead_session.names = paths
                     .filter_map(|result| {
