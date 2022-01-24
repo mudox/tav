@@ -1,0 +1,9 @@
+icon = " "
+
+# required
+title = "Watch & cargo check"
+
+[tmux]
+pane_title = "  Check"
+
+# description = ""
