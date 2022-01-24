@@ -19,10 +19,10 @@ pub fn run(config: Config) {
     match config.task {
         Task::Popup => match choose_window(config.clone()) {
             Some(id) => {
-                if id.starts_with("$") || id.starts_with("@") {
+                if id.starts_with('$') || id.starts_with('@') {
                     tmux::switch_to(&id);
-                } else if id.starts_with("[dead]") {
-                    create_session(&id[6..], config.clone());
+                } else if let Some(name) = id.strip_prefix("[dead]") {
+                    create_session(name, config);
                 }
             }
             None => debug!("quit with noop"),
@@ -63,30 +63,28 @@ fn choose_window(config: Config) -> Option<String> {
     //
 
     let mut cmd = Command::new("fzf-tmux");
-    let mut cmd_mut_ref = cmd.env("FZF_DEFAULT_OPTS", ""); // reset env effect
+    cmd.env("FZF_DEFAULT_OPTS", ""); // reset env effect
 
-    // poopup
-    cmd_mut_ref = cmd_mut_ref
-        .arg("-w")
+    // popup
+    cmd.arg("-w")
         .arg(width.to_string())
         .arg("-h")
         .arg(height.to_string());
 
     // search
-    cmd_mut_ref = cmd_mut_ref
+    cmd
         // .arg("--no-extended")
-        .arg("--exact")
+        // .arg("--exact")
         .arg("--with-nth=2..")
         .arg("--no-sort")
         // .arg("--exact")
         .arg("--tiebreak=end");
 
     // appearance
-    cmd_mut_ref = cmd_mut_ref
-        .arg("--color=bg:-1,bg+:-1") // transparent background
+    cmd.arg("--color=bg:-1,bg+:-1") // transparent background
         .arg("--layout=reverse")
         .arg("--ansi")
-        .arg("--margin=3,5,3,3") // 💀 magic number
+        .arg("--margin=3,5,3,3") // WARN: magic number
         .arg("--inline-info")
         .arg("--header")
         .arg("") // sepratate line
@@ -94,8 +92,7 @@ fn choose_window(config: Config) -> Option<String> {
         .arg("--pointer=▶");
 
     // key bindings
-    cmd_mut_ref = cmd_mut_ref
-        .arg("--bind")
+    cmd.arg("--bind")
         .arg("ctrl-j:page-down")
         .arg("--bind")
         .arg("ctrl-k:page-up")
@@ -104,7 +101,7 @@ fn choose_window(config: Config) -> Option<String> {
         .arg("--bind")
         .arg("ctrl-b:page-up");
 
-    let mut child = cmd_mut_ref
+    let mut child = cmd
         // pipe
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -124,7 +121,7 @@ fn choose_window(config: Config) -> Option<String> {
         .expect("failed to wait `fzf` to exit");
     let output = str::from_utf8(output.stdout.as_slice()).unwrap();
 
-    let id = output.split("\t").take(1).collect::<String>();
+    let id = output.split('\t').take(1).collect::<String>();
     debug!("chosen id: {:?}", id);
 
     if id.is_empty() {
